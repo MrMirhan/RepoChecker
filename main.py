@@ -66,33 +66,40 @@ def checkModules(pythonFiles):
             if line.find("import") >= 0:
                 if line.find(",") >= 0:
                     for modull in line.replace("import ", "").split(","):
-                        if modull.find("as") >= 0: modull = modull.split("as")[0]
                         modull = modull.replace("\n", "")
+                        alias = None
+                        if modull.find("as") >= 0:
+                            modull = modull.split("as")[0]
+                            alias = modull.split("as")[1]
                         puncs = 0
                         for char in modull:
                             if char in string.punctuation:
                                 puncs += 1
                         if puncs > 0: continue
                         if modull != "*":
-                            modules.append(modull)
+                            arr = {"module": modull, "alias": alias}
+                            modules.append(arr)
                 else:
                     module = line.split("import")[-1].replace("\n", "")
-                    if module.find("as") >= 0: module = module.split("as")[1]
+                    alias = None
+                    if module.find("as") >= 0:
+                        module = module.split("as")[0]
+                        alias = module.split("as")[1]
                     puncs = 0
                     for char in module:
                         if char in string.punctuation:
                             puncs += 1
                     if puncs > 0: continue
                     if module != "*":
-                        modules.append(module)
+                        arr = {"module": module, "alias": alias}
+                        modules.append(arr)
     return modules
 
 def makeModuleList(modules):
     moduleList = {}
     for module in modules:
-        module = module.replace(" ", "")
+        module = module['module'].replace(" ", "")
         moduleList[module]= []
-    return moduleList
 
 def checkFunctions(modules, pythonFiles, moduleList):
     for file in pythonFiles:
@@ -100,26 +107,33 @@ def checkFunctions(modules, pythonFiles, moduleList):
         for line in fileLines:
             if line.startswith("#"): continue
             for module in modules:
+                orgmodule = module['module']
+                try:
+                    if module['alias']:
+                        module = module['alias']
+                    else:
+                        module = module['module']
+                except:
+                    module = module['module']
                 if line.find(module + ".") >= 0 and line.find("import") < 0:
-                    functionList = re.findall(r"\.(.*?)\(", line)
-                    subFunctions = re.findall(r"\.(.*?)\.", line)
+                    functionList = re.findall(module + r"\.(.*?)\(", line)
                     for function in functionList:
                         if function.find(".") >= 0:
                             function = function.replace(".", " -> ")
-                        if function.find("=") >= 0: continue
+                        if function.find("=") >= 0: function = function.split("=")[1]
                         puncs = 0
                         for char in function:
                             if char in string.punctuation:
                                 puncs += 1
                         if puncs > 0: continue
-                        moduleList[module.replace(" ", "")].append(function)
+                        moduleList[orgmodule.replace(" ", "")].append(function)
     return moduleList
 
 def formatModuleList(modules, moduleList):
     for module in modules:
+        module = module['module']
         module = module.replace(" ", "")
-        moli = set(moduleList[module])
-        moduleList[module] = list(moli)
+        moduleList[module] = list(set(moduleList[module]))
         moduleList[module] = [x for x in moduleList[module] if x != ""]
     return moduleList
 
@@ -131,6 +145,7 @@ def createTree(modules, moduleList, original_path, path):
         os.mkdir(treePath)    
         open(treePath + "tree.txt", "w")
     for module in modules:
+        module = module['module']
         module = module.replace(" ", "")
         agac = open(treePath + "tree.txt", "r").read()
         open(treePath + "tree.txt", "w").write(agac + module + "\n")
