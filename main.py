@@ -169,6 +169,7 @@ def checkRepos():
         x = 0
         for repo in repos:
             print(str(x) + ".", repo)
+            x+=1
         selected = ""
         while selected != "exit":
             text = """
