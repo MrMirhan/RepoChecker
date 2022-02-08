@@ -161,41 +161,44 @@ def repoCheck(path):
 
 def checkRepos():
     repoPath = os.getcwd() + "/projects/unzipped/"
-    repos = os.listdir(repoPath)
-    x = 0
-    for repo in repos:
-        print(str(x) + ".", repo)
-    selected = ""
-    while selected != "exit":
-        text = """
+    repos = [x for x in os.listdir(repoPath) if os.path.isdir(x) == True]
+    if len(repos) == 0:
+        print("No repositories found.")
+    else:
+        x = 0
+        for repo in repos:
+            print(str(x) + ".", repo)
+        selected = ""
+        while selected != "exit":
+            text = """
 \tType `exit` for return main menu.
 \tType `all` for check all repositories and create tree scheme.
 \tType id of repository to check specific repository.            
 """
-        print(text)
-        selected = input("Your choice: ")
-        if selected == "all":
-            for repo in repos:
+            print(text)
+            selected = input("Your choice: ")
+            if selected == "all":
+                for repo in repos:
+                    try:
+                        check = repoCheck(repoPath + repo)
+                        print("Tree creation for " + repo + "successfully finished." if check == True else "Tree couldn't created successfully for " + repo)
+                    except Exception as e:
+                        print("Tree couldn't created successfully for", repo)
+                        print("Error:", e)
+            elif selected == "exit":
+                break
+            else:
                 try:
-                    check = repoCheck(repoPath + repo)
-                    print("Tree creation for " + repo + "successfully finished." if check == True else "Tree couldn't created successfully for " + repo)
+                    selected = int(selected)
+                    try:
+                        check = repoCheck(repoPath + repos[selected])
+                        print("Tree creation for " + repos[selected] + "successfully finished." if check == True else "Tree couldn't created successfully for " + repos[selected])
+                    except Exception as e:
+                        print("Tree couldn't created successfully for", repos[selected])
+                        print("Error:", e)
                 except Exception as e:
-                    print("Tree couldn't created successfully for", repo)
-                    print("Error:", e)
-        elif selected == "exit":
-            break
-        else:
-            try:
-                selected = int(selected)
-                try:
-                    check = repoCheck(repoPath + repos[selected])
-                    print("Tree creation for " + repos[selected] + "successfully finished." if check == True else "Tree couldn't created successfully for " + repos[selected])
-                except Exception as e:
-                    print("Tree couldn't created successfully for", repos[selected])
-                    print("Error:", e)
-            except Exception as e:
-                print(e)
-                print("Please select choice in menu!")
+                    print(e)
+                    print("Please select choice in menu!")
 
 def eraseData():
     folders = [os.getcwd() + "/trees", os.getcwd() + "/projects/unzipped", os.getcwd() + "/projects/zipped"]
