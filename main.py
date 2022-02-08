@@ -83,8 +83,9 @@ def checkModules(pythonFiles):
                     module = line.split("import")[-1].replace("\n", "")
                     alias = None
                     if module.find("as") >= 0:
-                        module = module.split("as")[0]
-                        alias = module.split("as")[1]
+                        moas = module.split("as")
+                        module = moas[0]
+                        alias = moas[1]
                     puncs = 0
                     for char in module:
                         if char in string.punctuation:
@@ -100,6 +101,7 @@ def makeModuleList(modules):
     for module in modules:
         module = module['module'].replace(" ", "")
         moduleList[module]= []
+    return moduleList
 
 def checkFunctions(modules, pythonFiles, moduleList):
     for file in pythonFiles:
@@ -125,8 +127,10 @@ def checkFunctions(modules, pythonFiles, moduleList):
                         for char in function:
                             if char in string.punctuation:
                                 puncs += 1
-                        if puncs > 0: continue
-                        moduleList[orgmodule.replace(" ", "")].append(function)
+                        if puncs > 0:
+                            continue
+                        else:
+                            moduleList[orgmodule.replace(" ", "")].append(function)
     return moduleList
 
 def formatModuleList(modules, moduleList):
