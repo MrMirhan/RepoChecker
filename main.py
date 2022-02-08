@@ -162,7 +162,7 @@ def repoCheck(path):
 
 def checkRepos():
     repoPath = os.getcwd() + "/projects/unzipped/"
-    repos = [x for x in os.listdir(repoPath) if os.path.isdir(x) == True]
+    repos = [x for x in os.listdir(repoPath) if os.path.isdir(repoPath + x) == True]
     if len(repos) == 0:
         print("No repositories found.")
     else:
@@ -206,14 +206,15 @@ def eraseData():
     for folder in folders:
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-            print("Successfully cleared path: %s" % file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    if not file_path.endswith("__init__.py") == True:
+                        os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+                print("Successfully cleared path: %s" % file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
     print("Done erasing.")
 
 def checkChoice(choice):
