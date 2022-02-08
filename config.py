@@ -1,0 +1,2 @@
+GITHUB_TOKEN = "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"
+VERSION = "0.1"
