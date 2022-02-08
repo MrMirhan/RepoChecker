@@ -57,7 +57,7 @@ def download_folder(url):
         zip_ref.extractall(unzippedPath)
     print("Repository installed successfully.")
 
-def checkModules(pythonFiles):
+def checkModules(pythonFiles, path):
     modules = []
     for file in pythonFiles:
         fileLines = open(file, "r").readlines()
@@ -65,19 +65,20 @@ def checkModules(pythonFiles):
             if line.startswith("#"): continue
             if line.find("import") >= 0:
                 if line.find(",") >= 0:
-                    for modull in line.replace("import ", "").split(","):
-                        modull = modull.replace("\n", "")
+                    for module in line.replace("import ", "").split(","):
+                        module = module.replace("\n", "")
                         alias = None
-                        if modull.find("as") >= 0:
-                            modull = modull.split("as")[0]
-                            alias = modull.split("as")[1]
+                        if module.find("as") >= 0:
+                            moas = module.split("as")
+                            module = moas[0]
+                            alias = moas[1]
                         puncs = 0
-                        for char in modull:
+                        for char in module:
                             if char in string.punctuation:
                                 puncs += 1
                         if puncs > 0: continue
-                        if modull != "*":
-                            arr = {"module": modull, "alias": alias}
+                        if module != "*" and not module.lower() in [exclude.lower() for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
+                            arr = {"module": module, "alias": alias}
                             modules.append(arr)
                 else:
                     module = line.split("import")[-1].replace("\n", "")
@@ -91,7 +92,7 @@ def checkModules(pythonFiles):
                         if char in string.punctuation:
                             puncs += 1
                     if puncs > 0: continue
-                    if module != "*":
+                    if module != "*" and not module.lower() in [exclude.lower().replace("\n", "") for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
                         arr = {"module": module, "alias": alias}
                         modules.append(arr)
     return modules
@@ -148,8 +149,7 @@ def createTree(modules, moduleList, original_path, path):
     except:
         os.mkdir(treePath)    
         open(treePath + "tree.txt", "w")
-    for module in modules:
-        module = module['module']
+    for module in moduleList:
         module = module.replace(" ", "")
         agac = open(treePath + "tree.txt", "r").read()
         open(treePath + "tree.txt", "w").write(agac + module + "\n")
@@ -171,7 +171,7 @@ def repoCheck(path):
         pythonFiles = pythonFiles + [directory+"/" + x for x in os.listdir(directory) if x.endswith(".py")]
     pythonFiles = list(set(pythonFiles))
 
-    modules = checkModules(pythonFiles)
+    modules = checkModules(pythonFiles, original_path)
     moduleList = makeModuleList(modules)
     moduleList = checkFunctions(modules, pythonFiles, moduleList)
     moduleList = formatModuleList(modules, moduleList)
@@ -218,8 +218,8 @@ def checkRepos():
                         print("Tree couldn't created successfully for", repos[selected])
                         print("Error:", e)
                 except Exception as e:
-                    print(e)
                     print("Please select choice in menu!")
+
 
 def eraseData():
     folders = [os.getcwd() + "/trees", os.getcwd() + "/projects/unzipped", os.getcwd() + "/projects/zipped"]
