@@ -55,6 +55,7 @@ def download_folder(url):
                 repo.write(chunk)
     with zipfile.ZipFile(zippedPath + url.split("/")[4]+".zip", 'r') as zip_ref:
         zip_ref.extractall(unzippedPath)
+    print("Repository installed successfully.")
 
 def checkModules(pythonFiles):
     modules = []
