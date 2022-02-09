@@ -368,7 +368,7 @@ def eraseData():
             file_path = os.path.join(folder, filename)
             try:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
-                    if not file_path.endswith("__init__.py") == True:
+                    if not file_path.find("__init__.py") >=0:
                         os.unlink(file_path)
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
