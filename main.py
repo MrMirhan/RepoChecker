@@ -63,8 +63,9 @@ def checkModules(pythonFiles, path):
         fileLines = open(file, "r").readlines()
         for line in fileLines:
             if line.startswith("#"): continue
-            if line.find("import") >= 0:
-                if line.find("from") >= 0:
+            if line.find("import ") >= 0:
+                if line.find("=") >= 0: continue
+                if line.find("from ") >= 0:
                     from_ = line.split("import")[0]
                     from_ = from_.replace("from ", "")
                     if from_.find(".") >= 0: from_ = from_.split(".")[0].replace(" ", "")
