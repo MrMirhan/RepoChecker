@@ -75,12 +75,13 @@ def checkModules(pythonFiles, path):
                     dotspl = str(str(line.split(" import ")[0]).split("from ")).split(".")
                     del dotspl[0]
                     if line.find(" as ") >= 0:
-                        alias = line.split(" as ")[1]
+                        alias = str(line.split(" as ")[1].replace("\n", "")).replace(" ", "")
                     else:
                         line = line.replace("from ", "")
                         if line.split("import")[1].find(",")>=0:
                             alias = []
                             for submod in line.split("import")[1].split(","):
+                                submod = str(submod.replace("\n", "")).replace(" ", "")
                                 alias.append(submod)
                         else:
                             alias = str(line.split("import")[1].replace(" ", "")).replace("\n", "")
@@ -88,7 +89,7 @@ def checkModules(pythonFiles, path):
                         if dot.find(" as ") >= 0:
                             dot = dot.split(" as ")[0]
                         prefunctions.append(str(dot.replace(" ", "")).replace("\n", ""))
-                    if module != "*" and not module.lower() in [exclude.lower() for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
+                    if module != "*":
                         if module in [x['module'] for x in modules]:
                             samem = [x for x in modules if x['module'] == module][0]
                             if type(samem['alias']) != list:
@@ -102,7 +103,15 @@ def checkModules(pythonFiles, path):
                                         samem['alias'].append(alias)
                                 else:
                                     samem['alias'].append(alias)
-                            samem['prefunctions'].extend(prefunctions)
+                            for prefunc in range(len(prefunctions)):
+                                for character in string.punctuation:
+                                    if character == "_": continue
+                                    prefunctions[prefunc] = prefunctions[prefunc].replace(character, '')
+                            if samem['prefunctions'] == None:
+                                samem['prefunctions'] = list()
+                                samem['prefunctions'].extend(prefunctions)
+                            else:
+                                samem['prefunctions'].extend(prefunctions)
                             modules = [x for x in modules if not x['module'] == module] + [samem]
                         else:
                             arr = {"module": module, "alias": alias, "prefunctions": prefunctions}
@@ -113,14 +122,14 @@ def checkModules(pythonFiles, path):
                         alias = None
                         if module.find(" as ") >= 0:
                             moas = module.split(" as ")
-                            module = moas[0]
-                            alias = moas[1]
+                            module = str(moas[0].replace("\n", "")).replace(" ", "")
+                            alias = str(moas[1].replace("\n", "")).replace(" ", "")
                         puncs = 0
                         for char in module:
                             if char in string.punctuation:
                                 puncs += 1
                         if puncs > 0: continue
-                        if module != "*" and not module.lower() in [exclude.lower() for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
+                        if module != "*":
                             arr = {"module": module, "alias": alias, "prefunctions": None}
                             modules.append(arr)
                 elif line.find(".") >= 0:
@@ -131,8 +140,8 @@ def checkModules(pythonFiles, path):
                     del dotspl[0]
                     if line.find(" as ") >= 0:
                         moas = line.split(" as ")
-                        module = str(line.split("import")[1]).split(".")[0].replace(" ", "")
-                        alias = moas[1].replace("\n", "")
+                        module = str(str(line.split("import")[1]).split(".")[0].replace(" ", "")).replace("\n", "")
+                        alias = str(moas[1].replace("\n", "")).replace(" ", "")
                     for dot in dotspl:
                         if dot.find(" as ") >= 0:
                             dot = dot.split(" as ")[0]
@@ -142,7 +151,11 @@ def checkModules(pythonFiles, path):
                         if char in string.punctuation:
                             puncs += 1
                     if puncs > 0: continue
-                    if module != "*" and not module.lower() in [exclude.lower() for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
+                    for prefunc in range(len(prefunctions)):
+                        for character in string.punctuation:
+                            if character == "_": continue
+                            prefunctions[prefunc] = prefunctions[prefunc].replace(character, '')
+                    if module != "*":
                         arr = {"module": module, "alias": alias, "prefunctions": prefunctions}
                         modules.append(arr)
                 else:
@@ -150,14 +163,14 @@ def checkModules(pythonFiles, path):
                     alias = None
                     if module.find(" as ") >= 0:
                         moas = module.split(" as ")
-                        module = moas[0].replace(" ", "")
+                        module = str(moas[0].replace(" ", "")).replace("\n", "")
                         alias = moas[1].replace("\n", "")
                     puncs = 0
                     for char in module:
                         if char in string.punctuation:
                             puncs += 1
                     if puncs > 0: continue
-                    if module != "*" and not module.lower() in [exclude.lower().replace("\n", "") for exclude in open(path + "/excludeList.txt", 'r').readlines()]:
+                    if module != "*":
                         arr = {"module": module, "alias": alias, "prefunctions": None}
                         modules.append(arr)
     return modules
@@ -186,15 +199,19 @@ def checkFunctions(modules, pythonFiles, moduleList):
                 orgmodule = module['module']
                 try:
                     if module['alias']:
-                        module = module['alias']
+                        modulee = module['alias']
                     else:
-                        module = module['module']
+                        modulee = module['module']
                 except:
-                    module = module['module']
-                if type(module) == list:
-                    for module in module:
+                    modulee = module['module']
+                if type(modulee) == list:
+                    for module in modulee:
+                        if type(module) != str: continue
                         if line.find(module + ".") >= 0 and line.find("import") < 0 and line.find("from") < 0:
-                            functionList = re.findall(module + r"\.(.*?)\(", line)
+                            try:
+                                functionList = re.findall(r"{}\.(.*?)\(".format(module), line)
+                            except:
+                                continue
                             for function in functionList:
                                 if function.find(".") >= 0:
                                     function = function.replace(".", " -> ")
@@ -207,21 +224,22 @@ def checkFunctions(modules, pythonFiles, moduleList):
                                     continue
                                 else:
                                     moduleList[orgmodule.replace(" ", "")].append(function)
-                        elif line.find(orgmodule + ".") >= 0 and line.find("import") >= 0 and line.split("import ")[1].find(".") >= 0 and line.find("from") < 0:
+                        elif line.find(orgmodule + ".") >= 0 and line.find("import ") >= 0 and line.split("import ")[1].find(".") >= 0 and line.find("from") < 0:
                             funt = line.split("import ")[1]
                             f = funt.split(".")
                             f[1] = f[1].replace("\n", "")
                             f[0] = f[0].replace(" ", "")
                             function = ""
                             if len(f) > 2:
+                                del f[0]
                                 x = 1
                                 for frrom in f:
                                     if x == len(f):
                                         function += " " + frrom
                                     elif x == 1:
-                                        function += frrom + "->"
+                                        function += frrom + " ->"
                                     else:
-                                        function += " " + frrom + "->"
+                                        function += " " + frrom + " ->"
                                     x+=1
                             else:
                                 function = f[1]
@@ -234,6 +252,7 @@ def checkFunctions(modules, pythonFiles, moduleList):
                                     continue
                             moduleList[orgmodule.replace(" ", "")].append(function)   
                 else:
+                    module = modulee
                     if line.find(module + ".") >= 0 and line.find("import") < 0 and line.find("from") < 0:
                         functionList = re.findall(module + r"\.(.*?)\(", line)
                         for function in functionList:
@@ -248,21 +267,22 @@ def checkFunctions(modules, pythonFiles, moduleList):
                                 continue
                             else:
                                 moduleList[orgmodule.replace(" ", "")].append(function)
-                    elif line.find(orgmodule + ".") >= 0 and line.find("import") >= 0 and line.split("import ")[1].find(".") >= 0 and line.find("from") < 0:
+                    elif line.find(orgmodule + ".") >= 0 and line.find("import ") >= 0 and line.split("import ")[1].find(".") >= 0 and line.find("from") < 0:
                             funt = line.split("import ")[1]
                             f = funt.split(".")
                             f[1] = f[1].replace("\n", "")
                             f[0] = f[0].replace(" ", "")
                             function = ""
                             if len(f) > 2:
+                                del f[0]
                                 x = 1
                                 for frrom in f:
                                     if x == len(f):
                                         function += " " + frrom
                                     elif x == 1:
-                                        function += frrom + "->"
+                                        function += frrom + " ->"
                                     else:
-                                        function += " " + frrom + "->"
+                                        function += " " + frrom + " ->"
                                     x+=1
                             else:
                                 function = f[1]
@@ -296,15 +316,14 @@ def createTree(modules, moduleList, original_path, path):
         agac = open(treePath + "tree.txt", "r").read()
         open(treePath + "tree.txt", "w").write(agac + module + "\n")
         if len(moduleList[module]) > 0:
+            moduleList[module] = sorted(moduleList[module])
             for function in moduleList[module]:
                 agac = open(treePath + "tree.txt", "r").read()
                 open(treePath + "tree.txt", "w").write(agac + "\t" + function + "\n")
     return True
 
-def repoCheck(path):
-    original_path = os.getcwd()
+def repoCheck(path, original_path):
     os.chdir(path)
-
     pythonFiles = [os.getcwd()+"/" + x for x in os.listdir(os.getcwd()) if x.endswith(".py")]
     directories = [x[0] for x in os.walk(os.getcwd())]
     del directories[0]
@@ -343,7 +362,7 @@ def checkRepos():
             if selected == "all":
                 for repo in repos:
                     try:
-                        check = repoCheck(repoPath + repo)
+                        check = repoCheck(repoPath + repo, os.getcwd())
                         print("Tree creation for " + repo + "successfully finished." if check == True else "Tree couldn't created successfully for " + repo)
                     except Exception as e:
                         print("Tree couldn't created successfully for", repo)
@@ -354,7 +373,7 @@ def checkRepos():
                 try:
                     selected = int(selected)
                     try:
-                        check = repoCheck(repoPath + repos[selected])
+                        check = repoCheck(repoPath + repos[selected], os.getcwd())
                         print("Tree creation for " + repos[selected] + "successfully finished." if check == True else "Tree couldn't created successfully for " + repos[selected])
                     except Exception as e:
                         print("Tree couldn't created successfully for", repos[selected])
