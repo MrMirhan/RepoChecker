@@ -64,7 +64,7 @@ def checkModules(pythonFiles, path):
         for line in fileLines:
             if line.startswith("#"): continue
             if line.find("import ") >= 0:
-                if line.find("=") >= 0 or line.find("if") or line.find("for") or line.find("while"): continue
+                if line.find("=") >= 0: continue
                 if line.find("from ") >= 0:
                     from_ = line.split("import")[0]
                     from_ = from_.replace("from ", "")
