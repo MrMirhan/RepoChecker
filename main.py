@@ -1,4 +1,3 @@
-from more_itertools import first
 import config
 import requests, os, re, string, shutil
 from github import Github
@@ -6,6 +5,7 @@ import zipfile
 
 g = Github(config.GITHUB_TOKEN)
 turnOff = False
+firstPath = os.getcwd()
 
 def splitList(_list):
     newList = []
@@ -422,7 +422,6 @@ welcomeText = f"""
 \t3. Check downloaded repositories.
 \t4. Erase all data.
 """
-firstPath = os.getcwd()
 while turnOff == False:
     print(welcomeText)
     try:
