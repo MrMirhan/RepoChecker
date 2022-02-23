@@ -4,7 +4,7 @@ from github import Github
 import zipfile
 
 g = Github(config.GITHUB_TOKEN)
-
+firstPath = os.getcwd()
 turnOff = False
 
 def splitList(_list):
@@ -47,8 +47,8 @@ def search_github(keywords):
 
 def download_folder(url):
     r = requests.get(url, stream = True)
-    zippedPath = os.getcwd() + "/projects/zipped/"
-    unzippedPath = os.getcwd() + "/projects/unzipped/"
+    zippedPath = firstPath + "/projects/zipped/"
+    unzippedPath = firstPath + "/projects/unzipped/"
     with open(zippedPath + url.split("/")[4]+".zip", "wb") as repo:
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:
@@ -304,8 +304,8 @@ def formatModuleList(modules, moduleList):
         moduleList[module] = [x for x in moduleList[module] if x != ""]
     return moduleList
 
-def createTree(modules, moduleList, original_path, path):
-    treePath = original_path + "/trees/" + path.split("/")[-1] + "/"
+def createTree(moduleList, path):
+    treePath = firstPath + "/trees/" + path.split("/")[-1] + "/"
     try:
         open(treePath + "tree.txt", "w")
     except:
@@ -322,7 +322,7 @@ def createTree(modules, moduleList, original_path, path):
                 open(treePath + "tree.txt", "w").write(agac + "\t" + function + "\n")
     return True
 
-def repoCheck(path, original_path):
+def repoCheck(path):
     os.chdir(path)
     pythonFiles = [os.getcwd()+"/" + x for x in os.listdir(os.getcwd()) if x.endswith(".py")]
     directories = [x[0] for x in os.walk(os.getcwd())]
@@ -332,16 +332,16 @@ def repoCheck(path, original_path):
         pythonFiles = pythonFiles + [directory+"/" + x for x in os.listdir(directory) if x.endswith(".py")]
     pythonFiles = list(set(pythonFiles))
 
-    modules = checkModules(pythonFiles, original_path)
+    modules = checkModules(pythonFiles, firstPath)
     moduleList = makeModuleList(modules)
     moduleList = checkFunctions(modules, pythonFiles, moduleList)
     moduleList = formatModuleList(modules, moduleList)
-    tree = createTree(modules, moduleList, original_path, path)
-    os.chdir(original_path)
+    tree = createTree(moduleList, firstPath)
+    os.chdir(firstPath)
     return tree
 
 def checkRepos():
-    repoPath = os.getcwd() + "/projects/unzipped/"
+    repoPath = firstPath + "/projects/unzipped/"
     repos = [x for x in os.listdir(repoPath) if os.path.isdir(repoPath + x) == True]
     if len(repos) == 0:
         print("No repositories found.")
@@ -362,7 +362,7 @@ def checkRepos():
             if selected == "all":
                 for repo in repos:
                     try:
-                        check = repoCheck(repoPath + repo, os.getcwd())
+                        check = repoCheck(repoPath + repo)
                         print("Tree creation for " + repo + "successfully finished." if check == True else "Tree couldn't created successfully for " + repo)
                     except Exception as e:
                         print("Tree couldn't created successfully for", repo)
@@ -373,7 +373,7 @@ def checkRepos():
                 try:
                     selected = int(selected)
                     try:
-                        check = repoCheck(repoPath + repos[selected], os.getcwd())
+                        check = repoCheck(repoPath + repos[selected])
                         print("Tree creation for " + repos[selected] + "successfully finished." if check == True else "Tree couldn't created successfully for " + repos[selected])
                     except Exception as e:
                         print("Tree couldn't created successfully for", repos[selected])
@@ -382,7 +382,7 @@ def checkRepos():
                     print("Please select choice in menu!")
 
 def eraseData():
-    folders = [os.getcwd() + "/trees", os.getcwd() + "/projects/unzipped", os.getcwd() + "/projects/zipped"]
+    folders = [firstPath + "/trees", firstPath + "/projects/unzipped", firstPath + "/projects/zipped"]
     for folder in folders:
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
