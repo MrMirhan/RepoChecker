@@ -1,10 +1,10 @@
+from more_itertools import first
 import config
 import requests, os, re, string, shutil
 from github import Github
 import zipfile
 
 g = Github(config.GITHUB_TOKEN)
-firstPath = os.getcwd()
 turnOff = False
 
 def splitList(_list):
@@ -336,7 +336,7 @@ def repoCheck(path):
     moduleList = makeModuleList(modules)
     moduleList = checkFunctions(modules, pythonFiles, moduleList)
     moduleList = formatModuleList(modules, moduleList)
-    tree = createTree(moduleList, firstPath)
+    tree = createTree(moduleList, path)
     os.chdir(firstPath)
     return tree
 
@@ -422,6 +422,7 @@ welcomeText = f"""
 \t3. Check downloaded repositories.
 \t4. Erase all data.
 """
+firstPath = os.getcwd()
 while turnOff == False:
     print(welcomeText)
     try:
